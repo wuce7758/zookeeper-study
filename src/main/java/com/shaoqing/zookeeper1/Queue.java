@@ -9,26 +9,18 @@ import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.data.Stat;
 
 /**
- * Producer-Consumer queue
+ * 一个消费者－生产者模式的消息队列
  */
 public class Queue extends SyncPrimitive {
 
-    /**
-     * Constructor of producer-consumer queue
-     *
-     * @param address
-     * @param name
-     */
     Queue(String address, String name) {
         super(address);
         this.root = name;
-        // Create ZK node name
         if (zk != null) {
             try {
                 Stat s = zk.exists(root, false);
                 if (s == null) {
-                    zk.create(root, new byte[0], Ids.OPEN_ACL_UNSAFE,
-                            CreateMode.PERSISTENT);
+                    zk.create(root, new byte[0], Ids.OPEN_ACL_UNSAFE,CreateMode.PERSISTENT);
                 }
             } catch (KeeperException e) {
                 System.out.println("Keeper exception when instantiating queue: " + e.toString());
@@ -39,17 +31,13 @@ public class Queue extends SyncPrimitive {
     }
 
     /**
-     * Add element to the queue.
-     *
-     * @param i
-     * @return
+	 * 队列中插入数据
      */
 
     boolean produce(int i) throws KeeperException, InterruptedException{
         ByteBuffer b = ByteBuffer.allocate(4);
         byte[] value;
 
-        // Add child with value i
         b.putInt(i);
         value = b.array();
         zk.create(root + "/element", value, Ids.OPEN_ACL_UNSAFE,CreateMode.PERSISTENT_SEQUENTIAL);
@@ -59,17 +47,13 @@ public class Queue extends SyncPrimitive {
 
 
     /**
-     * Remove first element from the queue.
-     *
-     * @return
-     * @throws KeeperException
-     * @throws InterruptedException
+     * 把元素从队列中移除
      */
     int consume() throws KeeperException, InterruptedException{
         int retvalue = -1;
         Stat stat = null;
 
-        // Get the first element available
+        //得到现在队列中首个可用的节点
         while (true) {
             synchronized (mutex) {
                 List<String> list = zk.getChildren(root, true);
@@ -84,8 +68,7 @@ public class Queue extends SyncPrimitive {
                         if(tempValue < min) min = tempValue;
                     }
                     System.out.println("Temporary value: " + root + "/element" + min);
-                    byte[] b = zk.getData(root + "/element" + min,
-                                false, stat);
+                    byte[] b = zk.getData(root + "/element" + min, false, stat);
                     zk.delete(root + "/element" + min, 0);
                     ByteBuffer buffer = ByteBuffer.wrap(b);
                     retvalue = buffer.getInt();

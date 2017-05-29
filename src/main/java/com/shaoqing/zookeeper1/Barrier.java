@@ -16,25 +16,16 @@ public class Barrier extends SyncPrimitive {
     int size;
     String name;
 
-    /**
-     * Barrier constructor
-     *
-     * @param address
-     * @param root
-     * @param size
-     */
     Barrier(String address, String root, int size) {
         super(address);
         this.root = root;
         this.size = size;
-
-        // Create barrier node
+        //创建Barrier的Node
         if (zk != null) {
             try {
                 Stat s = zk.exists(root, false);
                 if (s == null) {
-                    zk.create(root, new byte[0], Ids.OPEN_ACL_UNSAFE,
-                            CreateMode.PERSISTENT);
+                    zk.create(root, new byte[0], Ids.OPEN_ACL_UNSAFE,CreateMode.PERSISTENT);
                 }
             } catch (KeeperException e) {
                 System.out.println("Keeper exception when instantiating queue: " + e.toString());
@@ -42,8 +33,6 @@ public class Barrier extends SyncPrimitive {
                 System.out.println("Interrupted exception");
             }
         }
-
-        // My node name
         try {
             name = new String(InetAddress.getLocalHost().getCanonicalHostName().toString());
         } catch (UnknownHostException e) {
@@ -53,11 +42,7 @@ public class Barrier extends SyncPrimitive {
     }
 
     /**
-     * Join barrier
-     *
-     * @return
-     * @throws KeeperException
-     * @throws InterruptedException
+     * 加入Barrier等待
      */
 
     boolean enter() throws KeeperException, InterruptedException{
@@ -65,7 +50,6 @@ public class Barrier extends SyncPrimitive {
         while (true) {
             synchronized (mutex) {
                 List<String> list = zk.getChildren(root, true);
-
                 if (list.size() < size) {
                     mutex.wait();
                 } else {
@@ -76,11 +60,7 @@ public class Barrier extends SyncPrimitive {
     }
 
     /**
-     * Wait until all reach barrier
-     *
-     * @return
-     * @throws KeeperException
-     * @throws InterruptedException
+     * 一直等待知道指定数量节点到达
      */
 
     boolean leave() throws KeeperException, InterruptedException{

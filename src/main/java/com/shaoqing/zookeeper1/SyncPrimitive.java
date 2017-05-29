@@ -11,9 +11,8 @@ import org.apache.zookeeper.ZooKeeper;
 public class SyncPrimitive implements Watcher {
 	static ZooKeeper zk = null;
     static Integer mutex;
-
+    //根节点
     String root;
-
     SyncPrimitive(String address) {
         if(zk == null){
             try {
@@ -28,22 +27,12 @@ public class SyncPrimitive implements Watcher {
         }
         //else mutex = new Integer(-1);
     }
-
+    
     synchronized public void process(WatchedEvent event) {
         synchronized (mutex) {
             System.out.println("Process: " + event.getType());
             mutex.notify();
         }
-    }
-
-    
-    public static void main(String args[]) {
-    	args =new String[] {"qTest","localhost:4399","3","c"};
-        if (args[0].equals("qTest"))
-            queueTest(args);
-        else
-            barrierTest(args);
-
     }
 
     public static void queueTest(String args[]) {
@@ -90,11 +79,8 @@ public class SyncPrimitive implements Watcher {
         } catch (InterruptedException e){
 
         }
-
-        // Generate random integer
         Random rand = new Random();
         int r = rand.nextInt(100);
-        // Loop for rand iterations
         for (int i = 0; i < r; i++) {
             try {
                 Thread.sleep(100);
@@ -105,11 +91,17 @@ public class SyncPrimitive implements Watcher {
         try{
             b.leave();
         } catch (KeeperException e){
-
         } catch (InterruptedException e){
-
         }
         System.out.println("Left barrier");
+    }
+    //测试用的主类
+    public static void main(String args[]) {
+    	args =new String[] {"qTest","localhost:4399","3","c"};
+        if (args[0].equals("qTest"))
+            queueTest(args);
+        else
+            barrierTest(args);
     }
 }
 
